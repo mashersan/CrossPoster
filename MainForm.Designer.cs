@@ -32,12 +32,9 @@
             contextMenuStrip1 = new ContextMenuStrip(components);
             postTextBox = new TextBox();
             groupBox1 = new GroupBox();
-            label3 = new Label();
-            label2 = new Label();
-            label1 = new Label();
-            postMisskeyTextLength = new Label();
-            postBlueskyTextLength = new Label();
-            postTwitterTextLength = new Label();
+            misskeyCharCountLabel = new Label();
+            blueskyCharCountLabel = new Label();
+            twitterCharCountLabel = new Label();
             checkBoxMisskey = new CheckBox();
             checkBoxBluesky = new CheckBox();
             checkBoxX = new CheckBox();
@@ -58,26 +55,23 @@
             // 
             // postTextBox
             // 
-            postTextBox.Location = new Point(15, 26);
+            postTextBox.Location = new Point(10, 29);
             postTextBox.Margin = new Padding(3, 2, 3, 2);
             postTextBox.Multiline = true;
             postTextBox.Name = "postTextBox";
-            postTextBox.Size = new Size(680, 177);
+            postTextBox.Size = new Size(680, 182);
             postTextBox.TabIndex = 1;
             postTextBox.TextChanged += postTextBox_TextChanged;
             // 
             // groupBox1
             // 
-            groupBox1.Controls.Add(label3);
-            groupBox1.Controls.Add(label2);
-            groupBox1.Controls.Add(label1);
-            groupBox1.Controls.Add(postMisskeyTextLength);
-            groupBox1.Controls.Add(postBlueskyTextLength);
-            groupBox1.Controls.Add(postTwitterTextLength);
+            groupBox1.Controls.Add(misskeyCharCountLabel);
+            groupBox1.Controls.Add(blueskyCharCountLabel);
+            groupBox1.Controls.Add(twitterCharCountLabel);
             groupBox1.Controls.Add(checkBoxMisskey);
             groupBox1.Controls.Add(checkBoxBluesky);
             groupBox1.Controls.Add(checkBoxX);
-            groupBox1.Location = new Point(10, 230);
+            groupBox1.Location = new Point(10, 220);
             groupBox1.Margin = new Padding(3, 2, 3, 2);
             groupBox1.Name = "groupBox1";
             groupBox1.Padding = new Padding(3, 2, 3, 2);
@@ -86,59 +80,32 @@
             groupBox1.TabStop = false;
             groupBox1.Text = "送信先SNSを選択";
             // 
-            // label3
+            // misskeyCharCountLabel
             // 
-            label3.AutoSize = true;
-            label3.Location = new Point(148, 55);
-            label3.Name = "label3";
-            label3.Size = new Size(39, 15);
-            label3.TabIndex = 8;
-            label3.Text = "/ 3000";
+            misskeyCharCountLabel.Location = new Point(127, 55);
+            misskeyCharCountLabel.Name = "misskeyCharCountLabel";
+            misskeyCharCountLabel.Size = new Size(88, 15);
+            misskeyCharCountLabel.TabIndex = 8;
+            misskeyCharCountLabel.Text = "0 / 3000";
+            misskeyCharCountLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
-            // label2
+            // blueskyCharCountLabel
             // 
-            label2.AutoSize = true;
-            label2.Location = new Point(148, 36);
-            label2.Name = "label2";
-            label2.Size = new Size(33, 15);
-            label2.TabIndex = 7;
-            label2.Text = "/ 300";
+            blueskyCharCountLabel.Location = new Point(127, 36);
+            blueskyCharCountLabel.Name = "blueskyCharCountLabel";
+            blueskyCharCountLabel.Size = new Size(88, 15);
+            blueskyCharCountLabel.TabIndex = 7;
+            blueskyCharCountLabel.Text = "0 /   300";
+            blueskyCharCountLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
-            // label1
+            // twitterCharCountLabel
             // 
-            label1.AutoSize = true;
-            label1.Location = new Point(148, 17);
-            label1.Name = "label1";
-            label1.Size = new Size(33, 15);
-            label1.TabIndex = 6;
-            label1.Text = "/ 140";
-            // 
-            // postMisskeyTextLength
-            // 
-            postMisskeyTextLength.AutoSize = true;
-            postMisskeyTextLength.Location = new Point(131, 55);
-            postMisskeyTextLength.Name = "postMisskeyTextLength";
-            postMisskeyTextLength.Size = new Size(13, 15);
-            postMisskeyTextLength.TabIndex = 5;
-            postMisskeyTextLength.Text = "0";
-            // 
-            // postBlueskyTextLength
-            // 
-            postBlueskyTextLength.AutoSize = true;
-            postBlueskyTextLength.Location = new Point(131, 36);
-            postBlueskyTextLength.Name = "postBlueskyTextLength";
-            postBlueskyTextLength.Size = new Size(13, 15);
-            postBlueskyTextLength.TabIndex = 4;
-            postBlueskyTextLength.Text = "0";
-            // 
-            // postTwitterTextLength
-            // 
-            postTwitterTextLength.AutoSize = true;
-            postTwitterTextLength.Location = new Point(131, 17);
-            postTwitterTextLength.Name = "postTwitterTextLength";
-            postTwitterTextLength.Size = new Size(13, 15);
-            postTwitterTextLength.TabIndex = 3;
-            postTwitterTextLength.Text = "0";
+            twitterCharCountLabel.Location = new Point(127, 17);
+            twitterCharCountLabel.Name = "twitterCharCountLabel";
+            twitterCharCountLabel.Size = new Size(88, 15);
+            twitterCharCountLabel.TabIndex = 6;
+            twitterCharCountLabel.Text = "0 /   140";
+            twitterCharCountLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
             // checkBoxMisskey
             // 
@@ -191,7 +158,7 @@
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Padding = new Padding(5, 2, 0, 2);
-            menuStrip1.Size = new Size(703, 24);
+            menuStrip1.Size = new Size(700, 24);
             menuStrip1.TabIndex = 4;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -216,18 +183,18 @@
             終了ToolStripMenuItem.Text = "終了";
             終了ToolStripMenuItem.Click += 終了ToolStripMenuItem_Click;
             // 
-            // Form1
+            // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(703, 365);
+            ClientSize = new Size(700, 338);
             Controls.Add(menuStrip1);
             Controls.Add(postButton);
             Controls.Add(groupBox1);
             Controls.Add(postTextBox);
             MainMenuStrip = menuStrip1;
             Margin = new Padding(3, 2, 3, 2);
-            Name = "Form1";
+            Name = "MainForm";
             Text = "CrossPoster";
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
@@ -246,15 +213,12 @@
         private CheckBox checkBoxBluesky;
         private CheckBox checkBoxX;
         private Button postButton;
-        private Label postMisskeyTextLength;
-        private Label postBlueskyTextLength;
-        private Label postTwitterTextLength;
-        private Label label3;
-        private Label label2;
-        private Label label1;
         private MenuStrip menuStrip1;
         private ToolStripMenuItem オプションToolStripMenuItem;
         private ToolStripMenuItem 設定ToolStripMenuItem;
         private ToolStripMenuItem 終了ToolStripMenuItem;
+        private Label twitterCharCountLabel;
+        private Label blueskyCharCountLabel;
+        private Label misskeyCharCountLabel;
     }
 }

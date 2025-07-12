@@ -27,7 +27,7 @@ namespace CrossPoster
         #region Form Lifecycle
 
         /// <summary>
-        /// Form1のコンストラクタ。
+        /// MainFormのコンストラクタ。
         /// </summary>
         public MainForm()
         {
@@ -139,14 +139,18 @@ namespace CrossPoster
         private void postTextBox_TextChanged(object sender, EventArgs e)
         {
             int length = postTextBox.Text.Length;
-            postTwitterTextLength.Text = length.ToString();
-            postBlueskyTextLength.Text = length.ToString();
-            postMisskeyTextLength.Text = length.ToString();
 
-            // 各SNSの文字数制限に応じてカウンターの色を変更
-            postTwitterTextLength.ForeColor = length > 140 ? Color.Red : SystemColors.ControlText;
-            postBlueskyTextLength.ForeColor = length > 300 ? Color.Red : SystemColors.ControlText;
-            postMisskeyTextLength.ForeColor = length > 3000 ? Color.Red : SystemColors.ControlText;
+            // Twitterカウンターの更新
+            twitterCharCountLabel.Text = $"{length} / 140";
+            twitterCharCountLabel.ForeColor = length > 140 ? Color.Red : SystemColors.ControlText;
+
+            // Blueskyカウンターの更新
+            blueskyCharCountLabel.Text = $"{length} / 300";
+            blueskyCharCountLabel.ForeColor = length > 300 ? Color.Red : SystemColors.ControlText;
+
+            // Misskeyカウンターの更新
+            misskeyCharCountLabel.Text = $"{length} / 3000";
+            misskeyCharCountLabel.ForeColor = length > 3000 ? Color.Red : SystemColors.ControlText;
         }
 
         /// <summary>
@@ -155,7 +159,7 @@ namespace CrossPoster
         private void 設定ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // usingステートメントで、フォームが閉じられたときにリソースが自動的に解放されるようにする
-            using (var form2 = new SettingsForm())
+            using (var form2 = new SettingsForm()) // Form2をSettingsFormに変更
             {
                 form2.ShowDialog();
             }
