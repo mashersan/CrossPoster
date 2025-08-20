@@ -32,6 +32,9 @@
             contextMenuStrip1 = new ContextMenuStrip(components);
             postTextBox = new TextBox();
             groupBox1 = new GroupBox();
+            misskeyMediaStatusLabel = new Label();
+            blueskyMediaStatusLabel = new Label();
+            twitterMediaStatusLabel = new Label();
             misskeyCharCountLabel = new Label();
             blueskyCharCountLabel = new Label();
             twitterCharCountLabel = new Label();
@@ -69,6 +72,9 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(misskeyMediaStatusLabel);
+            groupBox1.Controls.Add(blueskyMediaStatusLabel);
+            groupBox1.Controls.Add(twitterMediaStatusLabel);
             groupBox1.Controls.Add(misskeyCharCountLabel);
             groupBox1.Controls.Add(blueskyCharCountLabel);
             groupBox1.Controls.Add(twitterCharCountLabel);
@@ -83,6 +89,33 @@
             groupBox1.TabIndex = 2;
             groupBox1.TabStop = false;
             groupBox1.Text = "送信先SNSを選択";
+            // 
+            // misskeyMediaStatusLabel
+            // 
+            misskeyMediaStatusLabel.AutoSize = true;
+            misskeyMediaStatusLabel.ForeColor = Color.Red;
+            misskeyMediaStatusLabel.Location = new Point(221, 56);
+            misskeyMediaStatusLabel.Name = "misskeyMediaStatusLabel";
+            misskeyMediaStatusLabel.Size = new Size(0, 15);
+            misskeyMediaStatusLabel.TabIndex = 11;
+            // 
+            // blueskyMediaStatusLabel
+            // 
+            blueskyMediaStatusLabel.AutoSize = true;
+            blueskyMediaStatusLabel.ForeColor = Color.Red;
+            blueskyMediaStatusLabel.Location = new Point(221, 37);
+            blueskyMediaStatusLabel.Name = "blueskyMediaStatusLabel";
+            blueskyMediaStatusLabel.Size = new Size(0, 15);
+            blueskyMediaStatusLabel.TabIndex = 10;
+            // 
+            // twitterMediaStatusLabel
+            // 
+            twitterMediaStatusLabel.AutoSize = true;
+            twitterMediaStatusLabel.ForeColor = Color.Red;
+            twitterMediaStatusLabel.Location = new Point(221, 18);
+            twitterMediaStatusLabel.Name = "twitterMediaStatusLabel";
+            twitterMediaStatusLabel.Size = new Size(0, 15);
+            twitterMediaStatusLabel.TabIndex = 9;
             // 
             // misskeyCharCountLabel
             // 
@@ -261,5 +294,8 @@
         private Button selectMediaButton;
         private PictureBox pictureBox;
         private Button clearMediaButton;
+        private Label misskeyMediaStatusLabel;
+        private Label blueskyMediaStatusLabel;
+        private Label twitterMediaStatusLabel;
     }
 }

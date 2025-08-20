@@ -20,32 +20,39 @@ namespace CrossPoster.Services
             try
             {
                 IBlueskyClient blueskyClient = new BlueskyClient(account, password);
+                Post post; // 送信するPostオブジェクトを宣言
 
-                X.Bluesky.Models.Image[]? imagesToEmbed = null;
-
-                // 画像パスが指定されていれば、投稿オブジェクトを作成する前に画像の準備を済ませる
+                // 画像パスの有無でPostオブジェクトの生成を分ける
                 if (!string.IsNullOrEmpty(imagePath))
                 {
+                    // --- 画像がある場合 ---
                     byte[] imageBytes = await File.ReadAllBytesAsync(imagePath);
-                    imagesToEmbed = new[]
+                    var imagesToEmbed = new[]
                     {
-                        // 'Image'の競合を避けるため、X.Bluesky.Models.Image とフルネームで指定
                         new X.Bluesky.Models.Image
                         {
                             Content = imageBytes,
-                            MimeType = "image/jpeg", // MIMEタイプを指定
-                            Alt = "" // 代替テキスト
+                            MimeType = "image/jpeg",
+                            Alt = ""
                         }
                     };
-                }
 
-                // 送信する投稿内容をPostオブジェクトとして構築
-                // オブジェクト初期化子の中で Images プロパティを設定する
-                var post = new Post
+                    // Imagesプロパティを含めてオブジェクトを生成
+                    post = new Post
+                    {
+                        Text = sendText,
+                        Images = imagesToEmbed // ここで non-null な値が設定される
+                    };
+                }
+                else
                 {
-                    Text = sendText,
-                    Images = imagesToEmbed
-                };
+                    // --- 画像がない場合 ---
+                    // Imagesプロパティを設定せずにオブジェクトを生成
+                    post = new Post
+                    {
+                        Text = sendText
+                    };
+                }
 
                 // 作成したPostオブジェクトを送信
                 await blueskyClient.Post(post);

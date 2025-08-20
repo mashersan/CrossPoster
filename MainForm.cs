@@ -28,6 +28,16 @@ namespace CrossPoster
         /// </summary>
         private string? _mediaPath = null;
 
+        // 各SNSの画像ファイルサイズ上限 (バイト単位)
+        private const long TWITTER_IMAGE_SIZE_LIMIT = 5 * 1024 * 1024; // 5MB
+        private const long BLUESKY_IMAGE_SIZE_LIMIT = 1 * 1024 * 1024; // 1MB
+        private const long MISSKEY_IMAGE_SIZE_LIMIT = 10 * 1024 * 1024; // 10MB (サーバーにより異なる)
+
+        // メディアが各SNSの要件を満たしているかの状態を保持
+        private bool _isMediaValidForTwitter = true;
+        private bool _isMediaValidForBluesky = true;
+        private bool _isMediaValidForMisskey = true;
+
         #endregion
 
         #region Form Lifecycle
@@ -38,7 +48,20 @@ namespace CrossPoster
         public MainForm()
         {
             InitializeComponent();
+            // フォームのLoadイベントハンドラを登録
+            this.Load += new System.EventHandler(this.MainForm_Load);
+        }
+
+        /// <summary>
+        /// フォームが読み込まれたときの処理。
+        /// </summary>
+        private async void MainForm_Load(object? sender, EventArgs e) // ★修正点: sender を object? に変更
+        {
             LoadSettingsAndApply();
+
+            // アップデートチェックを実行
+            var updateChecker = new UpdateChecker();
+            await updateChecker.CheckForUpdateAsync();
         }
 
         /// <summary>
@@ -64,56 +87,57 @@ namespace CrossPoster
         /// </summary>
         private async void postButton_Click(object sender, EventArgs e)
         {
+            // --- 投稿前バリデーション ---
+            var validationErrors = new List<string>();
+
+            // メディアファイルのサイズチェック
+            if (!string.IsNullOrEmpty(_mediaPath))
+            {
+                if (checkBoxX.Checked && !_isMediaValidForTwitter)
+                    validationErrors.Add("X (Twitter): 画像サイズが5MBを超えています。");
+                if (checkBoxBluesky.Checked && !_isMediaValidForBluesky)
+                    validationErrors.Add("Bluesky: 画像サイズが1MBを超えています。");
+                if (checkBoxMisskey.Checked && !_isMediaValidForMisskey)
+                    validationErrors.Add("Misskey: 画像サイズが10MBを超えています。");
+            }
+
+            // 文字数チェック
             string textToPost = postTextBox.Text;
-            var postTasks = new List<Tuple<string, Task>>();
+            if (checkBoxX.Checked && textToPost.Length > 140)
+                validationErrors.Add("X (Twitter): 140文字を超えています。");
+            if (checkBoxBluesky.Checked && textToPost.Length > 300)
+                validationErrors.Add("Bluesky: 300文字を超えています。");
+            if (checkBoxMisskey.Checked && textToPost.Length > 3000)
+                validationErrors.Add("Misskey: 3000文字を超えています。");
+
+            // 投稿先未選択チェック
+            if (!checkBoxX.Checked && !checkBoxBluesky.Checked && !checkBoxMisskey.Checked)
+            {
+                MessageBox.Show("投稿先のSNSを選択してください。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // バリデーションエラーがあればメッセージを表示して処理を中断
+            if (validationErrors.Any())
+            {
+                MessageBox.Show("以下の問題により投稿できませんでした：\n\n" + string.Join("\n", validationErrors),
+                                "投稿エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            // --- バリデーションここまで ---
+
 
             // 連続クリックを防ぐためにボタンを無効化
             postButton.Enabled = false;
 
-            // 各SNSのチェックボックスと文字数を確認し、投稿タスクを作成
+            // 投稿タスクを作成
+            var postTasks = new List<Tuple<string, Task>>();
             if (checkBoxX.Checked)
-            {
-                if (textToPost.Length > 140)
-                {
-                    MessageBox.Show("Twitterは140文字以内で入力してください。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                else
-                {
-                    postTasks.Add(new Tuple<string, Task>("Twitter", PostToTwitterAsync(textToPost, _mediaPath)));
-                }
-            }
-
+                postTasks.Add(new Tuple<string, Task>("Twitter", PostToTwitterAsync(textToPost, _mediaPath)));
             if (checkBoxBluesky.Checked)
-            {
-                if (textToPost.Length > 300)
-                {
-                    MessageBox.Show("Blueskyは300文字以内で入力してください。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                else
-                {
-                    postTasks.Add(new Tuple<string, Task>("Bluesky", PostToBlueskyAsync(textToPost, _mediaPath)));
-                }
-            }
-
+                postTasks.Add(new Tuple<string, Task>("Bluesky", PostToBlueskyAsync(textToPost, _mediaPath)));
             if (checkBoxMisskey.Checked)
-            {
-                if (textToPost.Length > 3000)
-                {
-                    MessageBox.Show("Misskeyは3000文字以内で入力してください。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                else
-                {
-                    postTasks.Add(new Tuple<string, Task>("Misskey", PostToMisskeyAsync(textToPost, _mediaPath)));
-                }
-            }
-
-            // 投稿先が選択されていない場合はメッセージを表示
-            if (!postTasks.Any())
-            {
-                MessageBox.Show("投稿先のSNSを選択してください。", "情報", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                postButton.Enabled = true;
-                return;
-            }
+                postTasks.Add(new Tuple<string, Task>("Misskey", PostToMisskeyAsync(textToPost, _mediaPath)));
 
             // 作成した投稿タスクをすべて非同期で実行
             var results = new List<string>();
@@ -210,6 +234,7 @@ namespace CrossPoster
                 {
                     _mediaPath = ofd.FileName;
                     pictureBox.ImageLocation = _mediaPath;
+                    ValidateMedia(_mediaPath);
                 }
             }
         }
@@ -227,12 +252,57 @@ namespace CrossPoster
         #region Private Methods
 
         /// <summary>
+        /// 添付されたメディアのファイルサイズを検証し、UIに結果を表示します。
+        /// </summary>
+        /// <param name="filePath">検証するファイルのパス。</param>
+        private void ValidateMedia(string? filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+            {
+                // ファイルパスがなければ全検証をリセット
+                _isMediaValidForTwitter = true;
+                _isMediaValidForBluesky = true;
+                _isMediaValidForMisskey = true;
+                twitterMediaStatusLabel.Text = "";
+                blueskyMediaStatusLabel.Text = "";
+                misskeyMediaStatusLabel.Text = "";
+                return;
+            }
+
+            try
+            {
+                var fileInfo = new FileInfo(filePath);
+                long fileSize = fileInfo.Length;
+
+                // Twitterのサイズチェック
+                _isMediaValidForTwitter = fileSize <= TWITTER_IMAGE_SIZE_LIMIT;
+                twitterMediaStatusLabel.Text = _isMediaValidForTwitter ? "" : "サイズ超過";
+
+                // Blueskyのサイズチェック
+                _isMediaValidForBluesky = fileSize <= BLUESKY_IMAGE_SIZE_LIMIT;
+                blueskyMediaStatusLabel.Text = _isMediaValidForBluesky ? "" : "サイズ超過";
+
+                // Misskeyのサイズチェック
+                _isMediaValidForMisskey = fileSize <= MISSKEY_IMAGE_SIZE_LIMIT;
+                misskeyMediaStatusLabel.Text = _isMediaValidForMisskey ? "" : "サイズ超過";
+            }
+            catch (Exception ex)
+            {
+                // ファイル情報の取得に失敗した場合
+                MessageBox.Show($"ファイル情報の取得に失敗しました: {ex.Message}", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ClearMedia();
+            }
+        }
+
+        /// <summary>
         /// 添付メディアをクリアします。
         /// </summary>
         private void ClearMedia()
         {
             _mediaPath = null;
             pictureBox.Image = null;
+            // メディアをクリアしたら検証ステータスもリセット
+            ValidateMedia(null);
         }
 
 
