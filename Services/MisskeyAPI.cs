@@ -1,5 +1,7 @@
-﻿using System.Text;
+﻿using System.Net.Http.Headers;
+using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace CrossPoster.Services
 {
@@ -12,16 +14,54 @@ namespace CrossPoster.Services
         private static readonly HttpClient _misskeyClient = new HttpClient();
 
         /// <summary>
-        /// 指定されたテキストをMisskeyに投稿します。
+        /// 指定されたテキストと画像をMisskeyに投稿します。
         /// </summary>
         /// <param name="baseUrl">MisskeyインスタンスのAPIベースURL。</param>
         /// <param name="accessToken">アクセストークン。</param>
         /// <param name="sendText">投稿するテキスト。</param>
-        public async Task PostAsync(string baseUrl, string accessToken, string sendText)
+        /// <param name="imagePath">添付する画像のパス。</param>
+        public async Task PostAsync(string baseUrl, string accessToken, string sendText, string? imagePath)
         {
-            // 画像投稿は未実装のため、fileIdは常にnull
             string? fileId = null;
+            if (!string.IsNullOrEmpty(imagePath))
+            {
+                // 画像をアップロードし、fileIdを取得
+                fileId = await UploadFileAsync(baseUrl, accessToken, imagePath);
+            }
+            // 取得したfileIdを使ってノートを作成
             await CreateNoteAsync(baseUrl, accessToken, sendText, fileId);
+        }
+
+        /// <summary>
+        /// Misskeyにファイルをアップロードする内部メソッド。
+        /// </summary>
+        private async Task<string?> UploadFileAsync(string baseUrl, string accessToken, string imagePath)
+        {
+            using var multipartContent = new MultipartFormDataContent();
+
+            // i (アクセストークン) を追加
+            multipartContent.Add(new StringContent(accessToken), "i");
+
+            // 画像ファイルを追加
+            byte[] fileBytes = await File.ReadAllBytesAsync(imagePath);
+            var fileContent = new ByteArrayContent(fileBytes);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+            multipartContent.Add(fileContent, "file", Path.GetFileName(imagePath));
+
+            var response = await _misskeyClient.PostAsync($"{baseUrl}/drive/files/create", multipartContent);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var parsedJson = JObject.Parse(jsonResponse);
+                // アップロードされたファイルのIDを返す
+                return parsedJson["id"]?.ToString();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Failed to upload file to Misskey. Status: {response.StatusCode}, Content: {errorContent}");
+            }
         }
 
         /// <summary>

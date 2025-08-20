@@ -44,6 +44,13 @@ namespace CrossPoster.Services
                 {
                     BaseUrl = data["MISSKEY"]["BaseUrl"],
                     AccessToken = data["MISSKEY"]["AccessToken"]
+                },
+                General = new GeneralSettings
+                {
+                    // iniファイルの値（文字列）をboolに変換して読み込む
+                    LastUsedTwitter = bool.TryParse(data["GENERAL"]["LastUsedTwitter"], out var twitter) && twitter,
+                    LastUsedBluesky = bool.TryParse(data["GENERAL"]["LastUsedBluesky"], out var bluesky) && bluesky,
+                    LastUsedMisskey = bool.TryParse(data["GENERAL"]["LastUsedMisskey"], out var misskey) && misskey,
                 }
             };
             return settings;
@@ -66,6 +73,11 @@ namespace CrossPoster.Services
 
             data["MISSKEY"]["BaseUrl"] = settings.Misskey.BaseUrl ?? "";
             data["MISSKEY"]["AccessToken"] = settings.Misskey.AccessToken ?? "";
+
+            // bool値を小文字の文字列 ("true" or "false") として書き込む
+            data["GENERAL"]["LastUsedTwitter"] = settings.General.LastUsedTwitter.ToString().ToLower();
+            data["GENERAL"]["LastUsedBluesky"] = settings.General.LastUsedBluesky.ToString().ToLower();
+            data["GENERAL"]["LastUsedMisskey"] = settings.General.LastUsedMisskey.ToString().ToLower();
 
             _parser.WriteFile(_filePath, data);
         }

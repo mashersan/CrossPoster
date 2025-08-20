@@ -45,6 +45,17 @@
     }
 
     /// <summary>
+    /// アプリケーションの一般的な設定を保持します。
+    /// </summary>
+    public class GeneralSettings
+    {
+        public bool LastUsedTwitter { get; set; } = false;
+        public bool LastUsedBluesky { get; set; } = false;
+        public bool LastUsedMisskey { get; set; } = false;
+    }
+
+
+    /// <summary>
     /// アプリケーション全体の設情報を集約するクラス。
     /// </summary>
     public class AppSettings
@@ -52,5 +63,6 @@
         public TwitterSettings Twitter { get; set; } = new TwitterSettings();
         public BlueskySettings Bluesky { get; set; } = new BlueskySettings();
         public MisskeySettings Misskey { get; set; } = new MisskeySettings();
+        public GeneralSettings General { get; set; } = new GeneralSettings();
     }
 }

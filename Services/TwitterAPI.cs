@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Tweetinvi;
 using Tweetinvi.Models;
+using Tweetinvi.Parameters;
 using Newtonsoft.Json;
 using System.Net.Http;
 
@@ -19,14 +20,31 @@ namespace CrossPoster.Services
         }
 
         /// <summary>
-        /// 指定されたテキストをTwitterに投稿します。
+        /// 指定されたテキストと画像をTwitterに投稿します。
         /// </summary>
         /// <param name="sendText">投稿するテキスト。</param>
-        public async Task PostAsync(string sendText)
+        /// <param name="imagePath">添付する画像のパス。</param>
+        public async Task PostAsync(string sendText, string? imagePath)
         {
-            var tweetParams = new TweetV2PostRequest { Text = sendText };
+            string? mediaId = null;
+            if (!string.IsNullOrEmpty(imagePath))
+            {
+                // 画像ファイルをバイト配列に読み込み
+                byte[] imageBytes = await File.ReadAllBytesAsync(imagePath);
+                // Tweetinviのv1 APIを使ってメディアをアップロード
+                var uploadedImage = await _twitterClient.Upload.UploadTweetImageAsync(imageBytes);
+                mediaId = uploadedImage.Id.ToString();
+            }
 
-            var jsonBody = _twitterClient.Json.Serialize(tweetParams);
+            // v2 API用のリクエストボディを作成
+            var tweetParams = new TweetV2PostRequest
+            {
+                Text = sendText,
+                Media = string.IsNullOrEmpty(mediaId) ? null : new Media { MediaIds = new[] { mediaId } }
+            };
+
+            // NullValueHandling.Ignore を指定して、mediaがnullの場合にJSONに含まれないようにする
+            var jsonBody = JsonConvert.SerializeObject(tweetParams, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
             var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
             var result = await _twitterClient.Execute.AdvanceRequestAsync(
@@ -54,5 +72,14 @@ namespace CrossPoster.Services
     {
         [JsonProperty("text")]
         public string Text { get; set; } = string.Empty;
+
+        [JsonProperty("media")]
+        public Media? Media { get; set; }
+    }
+
+    public class Media
+    {
+        [JsonProperty("media_ids")]
+        public string[] MediaIds { get; set; } = [];
     }
 }

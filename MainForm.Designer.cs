@@ -43,8 +43,12 @@
             オプションToolStripMenuItem = new ToolStripMenuItem();
             設定ToolStripMenuItem = new ToolStripMenuItem();
             終了ToolStripMenuItem = new ToolStripMenuItem();
+            selectMediaButton = new Button();
+            pictureBox = new PictureBox();
+            clearMediaButton = new Button();
             groupBox1.SuspendLayout();
             menuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox).BeginInit();
             SuspendLayout();
             // 
             // contextMenuStrip1
@@ -183,11 +187,44 @@
             終了ToolStripMenuItem.Text = "終了";
             終了ToolStripMenuItem.Click += 終了ToolStripMenuItem_Click;
             // 
+            // selectMediaButton
+            // 
+            selectMediaButton.Location = new Point(336, 220);
+            selectMediaButton.Name = "selectMediaButton";
+            selectMediaButton.Size = new Size(84, 23);
+            selectMediaButton.TabIndex = 5;
+            selectMediaButton.Text = "メディア選択";
+            selectMediaButton.UseVisualStyleBackColor = true;
+            selectMediaButton.Click += selectMediaButton_Click;
+            // 
+            // pictureBox
+            // 
+            pictureBox.BorderStyle = BorderStyle.FixedSingle;
+            pictureBox.Location = new Point(426, 220);
+            pictureBox.Name = "pictureBox";
+            pictureBox.Size = new Size(111, 103);
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox.TabIndex = 6;
+            pictureBox.TabStop = false;
+            // 
+            // clearMediaButton
+            // 
+            clearMediaButton.Location = new Point(336, 249);
+            clearMediaButton.Name = "clearMediaButton";
+            clearMediaButton.Size = new Size(84, 23);
+            clearMediaButton.TabIndex = 7;
+            clearMediaButton.Text = "クリア";
+            clearMediaButton.UseVisualStyleBackColor = true;
+            clearMediaButton.Click += clearMediaButton_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(700, 338);
+            Controls.Add(clearMediaButton);
+            Controls.Add(pictureBox);
+            Controls.Add(selectMediaButton);
             Controls.Add(menuStrip1);
             Controls.Add(postButton);
             Controls.Add(groupBox1);
@@ -200,6 +237,7 @@
             groupBox1.PerformLayout();
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -220,5 +258,8 @@
         private Label twitterCharCountLabel;
         private Label blueskyCharCountLabel;
         private Label misskeyCharCountLabel;
+        private Button selectMediaButton;
+        private PictureBox pictureBox;
+        private Button clearMediaButton;
     }
 }

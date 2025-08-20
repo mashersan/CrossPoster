@@ -1,5 +1,6 @@
 ﻿using CrossPoster.Models;
 using CrossPoster.Services;
+using System.Security.Policy;
 using Tweetinvi;
 
 namespace CrossPoster
@@ -22,6 +23,11 @@ namespace CrossPoster
         /// </summary>
         private AppSettings _settings = null!;
 
+        /// <summary>
+        /// 添付するメディアファイルのパス。
+        /// </summary>
+        private string? _mediaPath = null;
+
         #endregion
 
         #region Form Lifecycle
@@ -42,6 +48,11 @@ namespace CrossPoster
         {
             _settings = _settingsManager.Load();
             UpdateCheckBoxesState();
+
+            // 保存された前回のチェック状態を復元
+            checkBoxX.Checked = _settings.General.LastUsedTwitter;
+            checkBoxBluesky.Checked = _settings.General.LastUsedBluesky;
+            checkBoxMisskey.Checked = _settings.General.LastUsedMisskey;
         }
 
         #endregion
@@ -68,7 +79,7 @@ namespace CrossPoster
                 }
                 else
                 {
-                    postTasks.Add(new Tuple<string, Task>("Twitter", PostToTwitterAsync(textToPost)));
+                    postTasks.Add(new Tuple<string, Task>("Twitter", PostToTwitterAsync(textToPost, _mediaPath)));
                 }
             }
 
@@ -80,7 +91,7 @@ namespace CrossPoster
                 }
                 else
                 {
-                    postTasks.Add(new Tuple<string, Task>("Bluesky", PostToBlueskyAsync(textToPost)));
+                    postTasks.Add(new Tuple<string, Task>("Bluesky", PostToBlueskyAsync(textToPost, _mediaPath)));
                 }
             }
 
@@ -92,7 +103,7 @@ namespace CrossPoster
                 }
                 else
                 {
-                    postTasks.Add(new Tuple<string, Task>("Misskey", PostToMisskeyAsync(textToPost)));
+                    postTasks.Add(new Tuple<string, Task>("Misskey", PostToMisskeyAsync(textToPost, _mediaPath)));
                 }
             }
 
@@ -106,17 +117,28 @@ namespace CrossPoster
 
             // 作成した投稿タスクをすべて非同期で実行
             var results = new List<string>();
+            bool hasSuccess = false; // 少なくとも1つの投稿が成功したか
             foreach (var taskInfo in postTasks)
             {
                 try
                 {
                     await taskInfo.Item2;
                     results.Add($"{taskInfo.Item1}: 投稿に成功しました。");
+                    hasSuccess = true;
                 }
                 catch (Exception ex)
                 {
                     results.Add($"{taskInfo.Item1}: 投稿に失敗しました。\n  エラー: {ex.Message}");
                 }
+            }
+
+            // 少なくとも1つの投稿が成功した場合、チェックボックスの状態を保存
+            if (hasSuccess)
+            {
+                _settings.General.LastUsedTwitter = checkBoxX.Checked;
+                _settings.General.LastUsedBluesky = checkBoxBluesky.Checked;
+                _settings.General.LastUsedMisskey = checkBoxMisskey.Checked;
+                _settingsManager.Save(_settings);
             }
 
             // すべての投稿結果をまとめて表示
@@ -125,11 +147,12 @@ namespace CrossPoster
             // ボタンを再度有効化
             postButton.Enabled = true;
 
-            // 投稿後、テキストボックスをクリアするか確認
+            // 投稿後、テキストボックスと添付画像をクリアするか確認
             var clearResult = MessageBox.Show("入力内容をクリアしますか？", "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (clearResult == DialogResult.Yes)
             {
                 postTextBox.Text = string.Empty;
+                ClearMedia();
             }
         }
 
@@ -175,9 +198,43 @@ namespace CrossPoster
             Application.Exit();
         }
 
+        /// <summary>
+        /// 「メディア選択」ボタンがクリックされたときの処理。
+        /// </summary>
+        private void selectMediaButton_Click(object sender, EventArgs e)
+        {
+            using (var ofd = new OpenFileDialog())
+            {
+                ofd.Filter = "画像ファイル(*.jpg;*.jpeg;*.png;*.gif)|*.jpg;*.jpeg;*.png;*.gif";
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    _mediaPath = ofd.FileName;
+                    pictureBox.ImageLocation = _mediaPath;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 「クリア」ボタンがクリックされたときの処理。
+        /// </summary>
+        private void clearMediaButton_Click(object sender, EventArgs e)
+        {
+            ClearMedia();
+        }
+
         #endregion
 
         #region Private Methods
+
+        /// <summary>
+        /// 添付メディアをクリアします。
+        /// </summary>
+        private void ClearMedia()
+        {
+            _mediaPath = null;
+            pictureBox.Image = null;
+        }
+
 
         /// <summary>
         /// 設定に基づいて、各SNSのチェックボックスの有効/無効を切り替えます。
@@ -198,31 +255,34 @@ namespace CrossPoster
         /// Twitterへの投稿処理を呼び出すヘルパーメソッド。
         /// </summary>
         /// <param name="text">投稿するテキスト。</param>
-        private Task PostToTwitterAsync(string text)
+        /// <param name="imagePath">添付する画像のパス。</param>
+        private Task PostToTwitterAsync(string text, string? imagePath)
         {
             var twitterClient = new TwitterClient(_settings.Twitter.ConsumerKey, _settings.Twitter.ConsumerKeySecret, _settings.Twitter.AccessToken, _settings.Twitter.AccessTokenSecret);
             var twitterService = new TwitterService(twitterClient);
-            return twitterService.PostAsync(text);
+            return twitterService.PostAsync(text, imagePath);
         }
 
         /// <summary>
         /// Blueskyへの投稿処理を呼び出すヘルパーメソッド。
         /// </summary>
         /// <param name="text">投稿するテキスト。</param>
-        private Task PostToBlueskyAsync(string text)
+        /// <param name="imagePath">添付する画像のパス。</param>
+        private Task PostToBlueskyAsync(string text, string? imagePath)
         {
             var blueskyService = new BlueskyService();
-            return blueskyService.PostAsync(_settings.Bluesky.Account, _settings.Bluesky.Password, text);
+            return blueskyService.PostAsync(_settings.Bluesky.Account, _settings.Bluesky.Password, text, imagePath);
         }
 
         /// <summary>
         /// Misskeyへの投稿処理を呼び出すヘルパーメソッド。
         /// </summary>
         /// <param name="text">投稿するテキスト。</param>
-        private Task PostToMisskeyAsync(string text)
+        /// <param name="imagePath">添付する画像のパス。</param>
+        private Task PostToMisskeyAsync(string text, string? imagePath)
         {
             var misskeyService = new MisskeyService();
-            return misskeyService.PostAsync(_settings.Misskey.BaseUrl, _settings.Misskey.AccessToken, text);
+            return misskeyService.PostAsync(_settings.Misskey.BaseUrl, _settings.Misskey.AccessToken, text, imagePath);
         }
 
         #endregion
