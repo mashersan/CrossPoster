@@ -10,7 +10,7 @@ namespace CrossPoster.Services
     /// </summary>
     public class UpdateChecker
     {
-        private const string VersionCheckUrl = "http://masherhouse.com/wp-content/uploads/2025/08/CrossPoster-version.json";
+        private const string VersionCheckUrl = "https://raw.githubusercontent.com/mashersan/CrossPoster/refs/heads/master/version.json";
         private static readonly HttpClient _httpClient = new HttpClient();
 
         /// <summary>

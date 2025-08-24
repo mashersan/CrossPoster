@@ -1,6 +1,6 @@
 ﻿{
-  "latestVersion": "1.2.1",
-  "releaseNotes": "Misskeyへの投稿で改行が正常に反映されない問題",
+  "latestVersion": "1.2.2",
+  "releaseNotes": "バージョンチェック処理を修正",
   "githubUrl": "https://github.com/mashersan/CrossPoster/releases/tag/v1.2.1",
   "websiteUrl": "https://masherhouse.com/2025/08/20/%e3%80%90%e3%82%a2%e3%83%97%e3%83%aa%e3%80%91crossposter/"
 }
