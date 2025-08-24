@@ -69,14 +69,11 @@ namespace CrossPoster.Services
         /// </summary>
         private async Task CreateNoteAsync(string baseUrl, string accessToken, string sendText, string? fileId)
         {
-            // JSONで送信するために改行文字をエスケープ
-            string escapedText = sendText.Replace("\r\n", "\\n").Replace("\r", "\\n").Replace("\n", "\\n");
-
             // 送信するデータを匿名オブジェクトとして定義
             var payload = new
             {
                 i = accessToken,
-                text = escapedText,
+                text = sendText, 
                 fileIds = string.IsNullOrEmpty(fileId) ? null : new[] { fileId }
             };
 
